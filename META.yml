@@ -1,6 +1,6 @@
 ---
 name: XML-Grammar-Fortune
-version: 0.0102
+version: 0.0103
 author:
   - 'Shlomi Fish <shlomif@iglu.org.il>'
 abstract: convert the FortunesXML grammar to other formats and from plaintext.
@@ -22,7 +22,7 @@ build_requires:
 provides:
   XML::Grammar::Fortune:
     file: lib/XML/Grammar/Fortune.pm
-    version: 0.0102
+    version: 0.0103
   XML::Grammar::Fortune::ToText:
     file: lib/XML/Grammar/Fortune/ToText.pm
     version: 0.01

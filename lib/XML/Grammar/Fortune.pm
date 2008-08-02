@@ -30,11 +30,11 @@ XML::Grammar::Fortune - convert the FortunesXML grammar to other formats and fro
 
 =head1 VERSION
 
-Version 0.0102
+Version 0.0103
 
 =cut
 
-our $VERSION = '0.0102';
+our $VERSION = '0.0103';
 
 
 =head1 SYNOPSIS
@@ -247,7 +247,10 @@ sub run
     
     return;
 }
-=head1 FUNCTIONS
+
+=head2 open
+
+Meant to settle Pod::Coverage - introduced by Fatal. Ignore.
 
 =head1 AUTHOR
 
