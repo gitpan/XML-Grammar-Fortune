@@ -1,12 +1,12 @@
 ---
 name: XML-Grammar-Fortune
-version: 0.0104
+version: 0.0105
 author:
   - 'Shlomi Fish <shlomif@iglu.org.il>'
 abstract: convert the FortunesXML grammar to other formats and from plaintext.
 license: mit
 resources:
-  license: http://opensource.org/licenses/mit-license.php
+  license: http://www.opensource.org/licenses/mit-license.php
 requires:
   Class::Accessor: 0
   File::Spec: 0
@@ -22,11 +22,11 @@ build_requires:
 provides:
   XML::Grammar::Fortune:
     file: lib/XML/Grammar/Fortune.pm
-    version: 0.0104
+    version: 0.0105
   XML::Grammar::Fortune::ToText:
     file: lib/XML/Grammar/Fortune/ToText.pm
     version: 0.01
-generated_by: Module::Build version 0.2808
+generated_by: Module::Build version 0.31
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2

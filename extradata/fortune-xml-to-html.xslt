@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <xsl:stylesheet version = '1.0'
     xmlns:xsl='http://www.w3.org/1999/XSL/Transform'
-    
+    xmlns="http://www.w3.org/1999/xhtml"
      >
 
 <xsl:output method="xml" version="1.0" encoding="UTF-8" indent="yes"
@@ -13,15 +13,24 @@
 
 <!-- The purpose of this function is to recursively copy elements without a
 namespace-->
-<xsl:template mode="copy-no-ns" match="*">
-    <xsl:element name="{local-name()}">
+<xsl:template mode="copy-html-ns" match="*">
+    <xsl:element xmlns="http://www.w3.org/1999/xhtml" name="{local-name()}">
         <xsl:copy-of select="@*"/>
-        <xsl:apply-templates mode="copy-no-ns"/>
+        <xsl:apply-templates mode="copy-html-ns"/>
+    </xsl:element>
+</xsl:template>
+
+<xsl:template name="copy_html_ns_by_name">
+    <xsl:element xmlns="http://www.w3.org/1999/xhtml" name="{local-name()}">
+            <xsl:copy-of select="@*" />
+            <xsl:call-template name="copy_html_ns_by_name">
+                <xsl:value-of select="./*" />
+            </xsl:call-template>
     </xsl:element>
 </xsl:template>
 
 <xsl:template match="/collection">
-    <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
+    <html xml:lang="en-US">
         <head>
             <title>Fortunes</title>
             <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -40,7 +49,7 @@ namespace-->
 </xsl:template>
 
 <xsl:template match="fortune">
-    <div xmlns="http://www.w3.org/1999/xhtml" class="fortune">
+    <div class="fortune">
         <h3 id="{@id}"><xsl:call-template name="get_header" /></h3>
         <xsl:choose>
             <xsl:when test="irc">
@@ -53,7 +62,7 @@ namespace-->
                 <xsl:apply-templates select="quote" />
             </xsl:when>
             <xsl:when test="screenplay">
-                <xsl:apply-templates select="screenplay" />
+                <xsl:apply-templates select="screenplay" mode="screenplay_wrapper"/>
             </xsl:when>
             
         </xsl:choose> 
@@ -65,7 +74,7 @@ namespace-->
 </xsl:template>
 
 <xsl:template match="saying|me_is|joins|leaves">
-    <tr xmlns="http://www.w3.org/1999/xhtml">
+    <tr>
         <xsl:attribute name="class">
             <xsl:value-of select="name(.)" />
         </xsl:attribute>
@@ -119,7 +128,7 @@ namespace-->
 
 <xsl:template name="render_info">
     <xsl:if test="info/*">
-        <table xmlns="http://www.w3.org/1999/xhtml" class="info">
+        <table class="info">
             <tbody>
                 <xsl:apply-templates select="info/*" name="raw_info_subs"/>
             </tbody>
@@ -128,7 +137,7 @@ namespace-->
 </xsl:template>
 
 <xsl:template match="raw">
-    <pre xmlns="http://www.w3.org/1999/xhtml" class="raw">
+    <pre class="raw">
         <xsl:value-of select="body/text"/>
     </pre>
     <xsl:call-template name="render_info" select="." />
@@ -136,14 +145,14 @@ namespace-->
 
 <xsl:template match="quote">
     <blockquote>
-        <xsl:apply-templates select="body/*" mode="copy-no-ns"/>
+        <xsl:apply-templates select="body/*" mode="copy-html-ns"/>
     </blockquote>
     <xsl:call-template name="render_info" select="." />
 </xsl:template>
 
 
 <xsl:template match="irc">
-    <table xmlns="http://www.w3.org/1999/xhtml" class="irc-conversation">
+    <table class="irc-conversation">
         <tbody>
             <xsl:apply-templates select="body"/>
         </tbody>
@@ -151,16 +160,19 @@ namespace-->
     <xsl:call-template name="render_info" select="." />
 </xsl:template>
 
-<xsl:template match="screenplay">
+<xsl:template match="screenplay" mode="screenplay_wrapper">
+    <xsl:apply-templates select="." mode="screenplay_driver"/>
+</xsl:template>
+
+<xsl:template match="screenplay" mode="screenplay_driver">
     <div class="screenplay">
         <xsl:apply-templates select="body/*" mode="screenplay"/>
     </div>
     <xsl:call-template name="render_info" select="." />
 </xsl:template>
 
-
 <xsl:template match="*" name="raw_info_subs">
-    <tr xmlns="http://www.w3.org/1999/xhtml" class="{name(.)}">
+    <tr class="{name(.)}">
         <td class="field">
             <b>
                 <xsl:choose>
