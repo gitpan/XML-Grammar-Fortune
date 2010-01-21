@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 8;
+use Test::More tests => 15;
 use Test::Differences;
 
 use File::Spec;
@@ -14,7 +14,7 @@ use XML::LibXSLT;
 
 use XML::Grammar::Fortune::ToText;
 
-# TEST:$num_texts=8
+# TEST:$num_texts=15
 
 my @tests = (qw(
         raw-fort-empty-info-1
@@ -23,6 +23,13 @@ my @tests = (qw(
         irc-conversation-3-with-join-unjoin
         quote-fort-sample-2-with-brs
         quote-fort-sample-3-more-than-one-para
+        quote-fort-sample-4-ul
+        quote-fort-sample-5-ol
+        quote-fort-sample-6-with-bold
+        quote-fort-sample-7-with-italics
+        quote-fort-sample-8-with-em-and-strong
+        quote-fort-sample-9-with-blockquote
+        quote-fort-sample-10-with-hyperlink
         screenplay-fort-sample-1
         screenplay-fort-sample-2-long-line
     ));
@@ -31,7 +38,8 @@ sub read_file
 {
     my $path = shift;
 
-    open my $in, "<", $path;
+    open my $in, "<", $path
+        or die "Could not open '$path'! - $!";
     binmode $in, ":utf8";
     my $contents;
     {

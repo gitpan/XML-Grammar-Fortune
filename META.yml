@@ -1,19 +1,40 @@
 ---
-name: XML-Grammar-Fortune
-version: 0.0109
+abstract: 'convert the FortunesXML grammar to other formats and from plaintext.'
 author:
   - 'Shlomi Fish <shlomif@iglu.org.il>'
-abstract: convert the FortunesXML grammar to other formats and from plaintext.
-license: mit
-resources:
-  Freshmeat: http://freshmeat.net/projects/fortune-xml
-  homepage: http://web-cpan.berlios.de/modules/XML-Grammar-Fortune/
-  license: http://www.opensource.org/licenses/mit-license.php
-  repository: https://svn.berlios.de/svnroot/repos/web-cpan/XML-Grammar-Fortune/
 build_requires:
   IO::String: 0
   Test::Differences: 0
   Test::More: 0
+configure_requires:
+  Module::Build: 0.36
+generated_by: 'Module::Build version 0.3603'
+keywords:
+  - convert
+  - fortune
+  - fortunes
+  - grammar
+  - markup
+  - meta-data
+  - quotation
+  - quotations
+  - quote
+  - quotes
+  - text
+  - unix
+  - xml
+license: mit
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: XML-Grammar-Fortune
+provides:
+  XML::Grammar::Fortune:
+    file: lib/XML/Grammar/Fortune.pm
+    version: 0.0200
+  XML::Grammar::Fortune::ToText:
+    file: lib/XML/Grammar/Fortune/ToText.pm
+    version: 0.0200
 requires:
   Class::Accessor: 0
   File::Spec: 0
@@ -23,16 +44,9 @@ requires:
   perl: 5.008
   vars: 0
   warnings: 0
-configure_requires:
-  Module::Build: 0.35
-provides:
-  XML::Grammar::Fortune:
-    file: lib/XML/Grammar/Fortune.pm
-    version: 0.0109
-  XML::Grammar::Fortune::ToText:
-    file: lib/XML/Grammar/Fortune/ToText.pm
-    version: 0.0109
-generated_by: Module::Build version 0.35
-meta-spec:
-  url: http://module-build.sourceforge.net/META-spec-v1.4.html
-  version: 1.4
+resources:
+  Freshmeat: http://freshmeat.net/projects/fortune-xml
+  homepage: http://web-cpan.berlios.de/modules/XML-Grammar-Fortune/
+  license: http://www.opensource.org/licenses/mit-license.php
+  repository: https://svn.berlios.de/svnroot/repos/web-cpan/XML-Grammar-Fortune/
+version: 0.0200

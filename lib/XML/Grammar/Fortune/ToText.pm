@@ -29,11 +29,11 @@ XML::Grammar::Fortune::ToText - convert the FortunesXML grammar to plaintext.
 
 =head1 VERSION
 
-Version 0.0109
+Version 0.0200
 
 =cut
 
-our $VERSION = '0.0109';
+our $VERSION = '0.0200';
 
 
 =head1 SYNOPSIS
@@ -416,6 +416,153 @@ sub _append_to_this_line
     $self->_this_line($self->_this_line() . $more_text);
 }
 
+sub _append_different_formatting_node
+{
+    my ($self, $prefix, $suffix, $node) = @_;
+
+    return 
+        $self->_append_to_this_line(
+            $prefix . $node->textContent() . $suffix
+        );
+}
+
+sub _append_format_node
+{
+    my ($self, $delim, $node) = @_;
+
+    return $self->_append_different_formatting_node($delim, $delim, $node);
+}
+
+{
+    my %_formats_map =
+    (
+        "b" => "*",
+        "em" => "/",
+        "i" => "/",
+        "strong" => "*",
+    );
+
+    sub _get_node_formatting_delim
+    {
+        my ($self, $node) = @_;
+
+        my $name = $node->localname();
+
+        return exists($_formats_map{$name}) ? $_formats_map{$name} : "";
+    }
+}
+
+sub _handle_format_node
+{
+    my ($self, $node) = @_;
+
+    $self->_append_format_node(
+        $self->_get_node_formatting_delim($node),
+        $node,
+    );
+
+    return;
+}
+
+sub _render_para
+{
+    my ($self, $para) = @_;
+
+    foreach my $node ($para->childNodes())
+    {
+        if ($node->nodeType() == XML_ELEMENT_NODE())
+        {
+            my $name = $node->localname();
+
+            if ($name eq "br")
+            {
+                $self->_out_formatted_line();
+            }
+            elsif ($name eq "a")
+            {
+                $self->_append_different_formatting_node(
+                    "[",
+                    ("](". $node->getAttribute("href") . ")"),
+                    $node
+                );
+            }
+            else
+            {
+                $self->_handle_format_node($node);
+            }
+        }
+        elsif ($node->nodeType() == XML_TEXT_NODE())
+        {
+            my $node_text = $node->textContent();
+
+            # Intent: format the text.
+            # Trim leading and trailing nelines.
+            $node_text =~ s{\A\n+}{}ms;
+            $node_text =~ s{\n+\z}{}ms;
+
+            # Convert a sequence of space to a single space.
+            $node_text =~ s{\s+}{ }gms;
+
+            $self->_append_to_this_line($node_text);
+        }
+    }
+}
+
+sub _render_quote_list
+{
+    my ($self, $ul) = @_;
+
+    my $is_bullets = ($ul->localname() eq "ul");
+
+    my $items_list = $ul->findnodes("li");
+
+    my $idx = 1;
+
+    while (my $li = $items_list->shift())
+    {
+        $self->_append_to_this_line(
+            ($is_bullets ? "*" : "$idx.") . " "
+        );
+
+        $self->_render_para($li);
+    }
+    continue
+    {
+        $idx++;
+
+        $self->_out_formatted_line();
+
+        if ($items_list->size())
+        {
+            $self->_out("\n");
+        }
+    }
+
+    return;
+}
+
+sub _render_quote_portion_paras
+{
+    my ($self, $node) = @_;
+
+    $self->_render_portion_paras(
+        $node, { para_is => "blockquote|p|ol|ul" }
+    );
+
+    return;
+}
+
+sub _render_quote_blockquote
+{
+    my ($self, $node) = @_;
+
+    $self->_out("<<<\n\n");
+
+    $self->_render_quote_portion_paras($node);   
+
+    $self->_out("\n\n>>>");
+}
+
 sub _render_portion_paras
 {
     my ($self, $portion, $args) = @_;
@@ -428,33 +575,17 @@ sub _render_portion_paras
     {
         $self->_is_first_line(1);
 
-        foreach my $node ($para->childNodes())
+        if (($para->localname() eq "ul") || ($para->localname() eq "ol"))
         {
-            if ($node->nodeType() == XML_ELEMENT_NODE())
-            {
-                if ($node->localname() eq "br")
-                {
-                    $self->_out_formatted_line();
-                }
-                else
-                {
-                    $self->_append_to_this_line($node->textContent());
-                }
-            }
-            elsif ($node->nodeType() == XML_TEXT_NODE())
-            {
-                my $node_text = $node->textContent();
-
-                # Intent: format the text.
-                # Trim leading and trailing nelines.
-                $node_text =~ s{\A\n+}{}ms;
-                $node_text =~ s{\n+\z}{}ms;
-
-                # Convert a sequence of space to a single space.
-                $node_text =~ s{\s+}{ }gms;
- 
-                $self->_append_to_this_line($node_text);
-            }
+            $self->_render_quote_list($para);
+        }
+        elsif ($para->localname() eq "blockquote")
+        {
+            $self->_render_quote_blockquote($para);
+        }
+        else
+        {
+            $self->_render_para($para);
         }
 
         if ($self->_this_line() =~ m{\S})
@@ -478,7 +609,7 @@ sub _process_quote_node
 
     my ($body_node) = $quote_node->findnodes("body");
 
-    $self->_render_portion_paras($body_node, { para_is => "p" });
+    $self->_render_quote_portion_paras($body_node);   
 
     $self->_out("\n");
 
