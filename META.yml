@@ -8,7 +8,7 @@ build_requires:
   Test::More: 0
 configure_requires:
   Module::Build: 0.36
-generated_by: 'Module::Build version 0.3603'
+generated_by: 'Module::Build version 0.3607'
 keywords:
   - convert
   - fortune
@@ -31,10 +31,10 @@ name: XML-Grammar-Fortune
 provides:
   XML::Grammar::Fortune:
     file: lib/XML/Grammar/Fortune.pm
-    version: 0.0200
+    version: 0.0300
   XML::Grammar::Fortune::ToText:
     file: lib/XML/Grammar/Fortune/ToText.pm
-    version: 0.0200
+    version: 0.0300
 requires:
   Class::Accessor: 0
   File::Spec: 0
@@ -49,4 +49,4 @@ resources:
   homepage: http://web-cpan.berlios.de/modules/XML-Grammar-Fortune/
   license: http://www.opensource.org/licenses/mit-license.php
   repository: https://svn.berlios.de/svnroot/repos/web-cpan/XML-Grammar-Fortune/
-version: 0.0200
+version: 0.0300

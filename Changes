@@ -1,3 +1,9 @@
+0.0300      Sat Sep 25 20:05:32 IST 2010
+        - Add support for text-rendering of the Screenplay-XML <inlinedesc>
+        tag, so it will now render as '[' ... ']' inside the paragraphs.
+        - Add the tag-release.pl file to tag a release to the Subversion
+        repository.
+
 0.0200      Thu Jan 21 19:10:28 IST 2010
         - Fixed some validation errors in the XSLT stylesheet that caused
         the Firefox and Opera browser to give up with an error.
