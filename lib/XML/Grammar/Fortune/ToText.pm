@@ -17,8 +17,6 @@ __PACKAGE__->mk_accessors(qw(
     _mode
     _input
     _output
-    _fortunes_list
-    _fortune
     _this_line
     ));
 
@@ -29,11 +27,11 @@ XML::Grammar::Fortune::ToText - convert the FortunesXML grammar to plaintext.
 
 =head1 VERSION
 
-Version 0.0300
+Version 0.0400
 
 =cut
 
-our $VERSION = '0.0300';
+our $VERSION = '0.0400';
 
 
 =head1 SYNOPSIS
@@ -91,6 +89,71 @@ sub _out
     return;
 }
 
+sub _start_new_line
+{
+    my ($self) = @_;
+
+    return $self->_out("\n");
+}
+
+sub _render_single_fortune_cookie
+{
+    my ($self, $fortune_node) = @_;
+
+    my ($node) = $fortune_node->findnodes("raw|irc|screenplay|quote");
+
+    my $method = sprintf("_process_%s_node", $node->localname());
+
+    $self->$method($node);
+
+    $self->_render_info_if_exists($fortune_node);
+
+    return;
+}
+
+sub _output_next_fortune_delim
+{
+    my $self = shift;
+
+    return $self->_out("%\n");
+}
+
+sub _do_nothing {}
+
+sub _iterate_on_child_elems
+{
+    my ($self, $top_elem, $xpath, $args) = @_;
+    
+    my $process = $args->{'process'};
+    my $if_remainaing_meth = $args->{'if_more'};
+    my $continue_cb = ($args->{'cont'} || \&_do_nothing);
+
+    my $process_cb = 
+    (
+        (ref($process) eq "CODE")
+        ? $process
+        : sub { return $self->$process(shift); }
+    );
+
+    my $list = $top_elem->findnodes($xpath);
+
+    while (my $elem = $list->shift())
+    {
+        $process_cb->($elem);
+    }
+    continue
+    {
+        $continue_cb->();
+
+        if ($list->size())
+        {
+            $self->$if_remainaing_meth();
+        }
+    }
+
+    return;
+}
+
 =head2 $self->run()
 
 Runs the processor. If $mode is "validate", validates the document.
@@ -103,39 +166,26 @@ sub run
 
     my $xml = XML::LibXML->new->parse_file($self->_input());
 
-    $self->_fortunes_list(scalar($xml->findnodes("//fortune")));
+    $self->_iterate_on_child_elems(
+        $xml, 
+        "//fortune",
+        {
+            process => '_render_single_fortune_cookie',
+            if_more => '_output_next_fortune_delim',
+        }
+    );
 
-    while ($self->_fortune($self->_fortunes_list->shift()))
+    return;
+}
+
+sub _render_info_if_exists
+{
+    my ($self, $fortune_node) = @_;
+
+    if (my ($info_node) = $fortune_node->findnodes("descendant::info"))
     {
-        my ($raw_node) = $self->_fortune()->findnodes("raw|irc|screenplay|quote");
-
-        if ($raw_node->localname() eq "raw")
-        {
-            $self->_process_raw_node($raw_node);
-        }
-        elsif ($raw_node->localname() eq "irc")
-        {
-            $self->_process_irc_node($raw_node);
-        }
-        elsif ($raw_node->localname() eq "screenplay")
-        {
-            $self->_process_screenplay_node($raw_node);
-        }
-        elsif ($raw_node->localname() eq "quote")
-        {
-            $self->_process_quote_node($raw_node);
-        }
+        $self->_render_info_node($info_node);
     }
-    continue
-    {
-        # If there are more fortunes - output a separator.
-        if ($self->_fortunes_list->size())
-        {
-            $self->_out("%\n");
-        }
-    }
-
-    $self->_fortunes_list(undef);
 
     return;
 }
@@ -164,11 +214,6 @@ sub _process_raw_node
 
     $value =~ s{\n+\z}{}g;
     $self->_out("$value\n");
-
-    if (() = $self->_fortune()->findnodes("descendant::info/*"))
-    {
-        $self->_render_info();
-    }
 
     return;
 }
@@ -323,11 +368,6 @@ sub _process_irc_node
         }
     }
 
-    if (() = $self->_fortune()->findnodes("descendant::info/*"))
-    {
-        $self->_render_info();
-    }
-
     return;
 }
 
@@ -337,46 +377,60 @@ sub _render_screenplay_paras
     return $self->_render_portion_paras($portion, {para_is => "para"});
 }
 
+sub _is_portion_desc
+{
+    my ($self, $portion) = @_;
+
+    return ($portion->localname() eq "description");
+}
+
+sub _get_screenplay_portion_opening
+{
+    my ($self, $portion) = @_;
+
+    return $self->_is_portion_desc($portion)
+        ? "["
+        # A saying.
+        : ($portion->getAttribute("character") . ": ")
+        ;
+}
+
+sub _handle_screenplay_portion
+{
+    my ($self, $portion) = @_;
+
+    $self->_this_line(
+        $self->_get_screenplay_portion_opening($portion)
+    );
+
+    $self->_render_screenplay_paras($portion);
+
+    if ($self->_is_portion_desc($portion))
+    {
+        $self->_out("]");
+    }
+
+    $self->_start_new_line;
+
+    return;
+}
+
 sub _process_screenplay_node
 {
     my ($self, $play_node) = @_;
 
     my ($body_node) = $play_node->findnodes("body");
 
-    my $portions_list = $body_node->findnodes("description|saying");
-
-    
-    while (my $portion = $portions_list->shift())
-    {
-        if ($portion->localname() eq "description")
+    $self->_iterate_on_child_elems(
+        $body_node,
+        "description|saying",
         {
-            $self->_this_line("[");
-
-            $self->_render_screenplay_paras($portion);
-
-            $self->_out("]\n");
+            process => '_handle_screenplay_portion',
+            if_more => '_start_new_line',
         }
-        else # localname() is "saying"
-        {
-            $self->_this_line($portion->getAttribute("character") . ": ");
+    );
 
-            $self->_render_screenplay_paras($portion);
-
-            $self->_out("\n");
-        }
-    }
-    continue
-    {
-        if ($portions_list->size())
-        {
-            $self->_out("\n");
-        }
-    }
-
-    if (() = $self->_fortune()->findnodes("descendant::info/*"))
-    {
-        $self->_render_info();
-    }    
+    return;
 }
 
 sub _out_formatted_line
@@ -394,7 +448,7 @@ sub _out_formatted_line
     }
     else
     {
-        $self->_out("\n");
+        $self->_start_new_line;
     }
 
     my $output_string = $self->_formatter->format($text);
@@ -424,13 +478,6 @@ sub _append_different_formatting_node
         $self->_append_to_this_line(
             $prefix . $node->textContent() . $suffix
         );
-}
-
-sub _append_format_node
-{
-    my ($self, $delim, $node) = @_;
-
-    return $self->_append_different_formatting_node($delim, $delim, $node);
 }
 
 {
@@ -470,6 +517,24 @@ sub _handle_format_node
     return;
 }
 
+sub _get_formatted_node_text
+{
+    my $self = shift;
+    my $node = shift;
+
+    my $text = $node->textContent();
+
+    # Intent: format the text.
+    # Trim leading and trailing nelines.
+    $text =~ s{\A\n+}{}ms;
+    $text =~ s{\n+\z}{}ms;
+
+    # Convert a sequence of spaces to a single space.
+    $text =~ s{\s+}{ }gms;
+
+    return $text;
+}
+
 sub _render_para
 {
     my ($self, $para) = @_;
@@ -499,17 +564,9 @@ sub _render_para
         }
         elsif ($node->nodeType() == XML_TEXT_NODE())
         {
-            my $node_text = $node->textContent();
-
-            # Intent: format the text.
-            # Trim leading and trailing nelines.
-            $node_text =~ s{\A\n+}{}ms;
-            $node_text =~ s{\n+\z}{}ms;
-
-            # Convert a sequence of space to a single space.
-            $node_text =~ s{\s+}{ }gms;
-
-            $self->_append_to_this_line($node_text);
+            $self->_append_to_this_line(
+                $self->_get_formatted_node_text($node)
+            );
         }
     }
 }
@@ -520,29 +577,33 @@ sub _render_quote_list
 
     my $is_bullets = ($ul->localname() eq "ul");
 
-    my $items_list = $ul->findnodes("li");
-
     my $idx = 1;
 
-    while (my $li = $items_list->shift())
-    {
-        $self->_append_to_this_line(
-            ($is_bullets ? "*" : "$idx.") . " "
-        );
-
-        $self->_render_para($li);
-    }
-    continue
-    {
-        $idx++;
-
-        $self->_out_formatted_line();
-
-        if ($items_list->size())
+    $self->_iterate_on_child_elems(
+        $ul,
+        "li",
         {
-            $self->_out("\n");
+            process => sub {
+                my $li = shift;
+
+                $self->_append_to_this_line(
+                    ($is_bullets ? "*" : "$idx.") . " "
+                );
+
+                $self->_render_para($li);
+
+                return;
+            },
+            cont => sub {
+                $idx++;
+
+                $self->_out_formatted_line();
+
+                return;
+            },
+            if_more => '_start_new_line',
         }
-    }
+    );
 
     return;
 }
@@ -569,44 +630,58 @@ sub _render_quote_blockquote
     $self->_out("\n\n>>>");
 }
 
+sub _start_new_para
+{
+    my ($self) = @_;
+
+    return $self->_out("\n\n");
+}
+
+sub _handle_portion_paragraph
+{
+    my $self = shift;
+    my $para = shift;
+
+    $self->_is_first_line(1);
+
+    if (($para->localname() eq "ul") || ($para->localname() eq "ol"))
+    {
+        $self->_render_quote_list($para);
+    }
+    elsif ($para->localname() eq "blockquote")
+    {
+        $self->_render_quote_blockquote($para);
+    }
+    else
+    {
+        $self->_render_para($para);
+    }
+
+    if ($self->_this_line() =~ m{\S})
+    {
+        $self->_out_formatted_line();
+        $self->_this_line("");
+    }
+
+    return;
+}
+
 sub _render_portion_paras
 {
     my ($self, $portion, $args) = @_;
 
     my $para_name = $args->{para_is};
 
-    my $paragraphs = $portion->findnodes($para_name);
+    $self->_iterate_on_child_elems(
+        $portion,
+        $para_name,
+        {
+            process => '_handle_portion_paragraph',
+            if_more => '_start_new_para',
+        }
+    );
 
-    while (my $para = $paragraphs->shift())
-    {
-        $self->_is_first_line(1);
-
-        if (($para->localname() eq "ul") || ($para->localname() eq "ol"))
-        {
-            $self->_render_quote_list($para);
-        }
-        elsif ($para->localname() eq "blockquote")
-        {
-            $self->_render_quote_blockquote($para);
-        }
-        else
-        {
-            $self->_render_para($para);
-        }
-
-        if ($self->_this_line() =~ m{\S})
-        {
-            $self->_out_formatted_line();
-            $self->_this_line("");
-        }
-    }
-    continue
-    {
-        if ($paragraphs->size())
-        {
-            $self->_out("\n\n");
-        }
-    }
+    return;
 }
 
 sub _process_quote_node
@@ -617,12 +692,9 @@ sub _process_quote_node
 
     $self->_render_quote_portion_paras($body_node);   
 
-    $self->_out("\n");
+    $self->_start_new_line;
 
-    if (() = $self->_fortune()->findnodes("descendant::info/*"))
-    {
-        $self->_render_info();
-    }
+    return;
 }
 
 my @info_fields_order = (qw(work author channel tagline));
@@ -638,58 +710,93 @@ sub _info_field_value
     return $info_fields_order_map{$field->localname()} || (-1);
 }
 
-sub _render_info
+sub _calc_info_field_processed_content
 {
-    my ($self) = @_;
+    my $self = shift;
+    my $field_node = shift;
 
-    my $fortune = $self->_fortune();
+    my $content = $field_node->textContent();
 
-    $self->_out("\n");
+    # Squash whitespace including newlines into a single space.
+    $content =~ s{\s+}{ }g;
 
-    my ($info) = $fortune->findnodes("descendant::info");
-    
-    my @fields = $info->findnodes("*");
+    # Remove leading and trailing space - it is not desirable here
+    # because we want it formatted consistently.
+    $content =~ s{\A\s+}{};
+    $content =~ s{\s+\z}{};
 
-    foreach my $field_node (
-        reverse(
-        sort { 
+    return $content;
+}
+
+sub _output_info_value
+{
+    my ($self, $string) = @_;
+
+    return $self->_out((' ' x 4) . '-- ' . $string . "\n");
+}
+
+sub _out_info_field_node
+{
+    my ($self, $info_node, $field_node) = @_;
+
+    my $name = $field_node->localname();
+    my $value = $self->_calc_info_field_processed_content($field_node);
+
+    if ($name eq "author")
+    {
+        $self->_output_info_value($value);
+    }
+    elsif (($name eq "work") || ($name eq "tagline"))
+    {
+        my $url = "";
+
+        if ($field_node->hasAttribute("href"))
+        {
+            $url = " ( " . $field_node->getAttribute("href") . " )";
+        }
+
+        $self->_output_info_value($value.$url);
+    }
+    elsif ($name eq "channel")
+    {
+        my $channel = $field_node->textContent();
+        my $network = $info_node->findnodes("network")->shift()->textContent();
+        
+        $self->_output_info_value( "$channel, $network" );
+    }
+
+    return;
+}
+
+sub _get_info_node_fields
+{
+    my ($self, $info_node) = @_;
+
+    return
+        reverse
+        sort {
             $self->_info_field_value($a) <=> $self->_info_field_value($b)
         }
-        @fields)
-    )
-    {
-        my $name = $field_node->localname();
+        $info_node->findnodes("*")
+    ;
 
-        if ($name eq "author")
+}
+
+sub _render_info_node
+{
+    my ($self, $info_node) = @_;
+
+    if (my @f = $self->_get_info_node_fields($info_node))
+    {
+        $self->_start_new_line;
+
+        foreach my $field_node (@f)
         {
-            $self->_out((" " x 4) . "-- " . $field_node->textContent() . "\n");
+            $self->_out_info_field_node($info_node, $field_node);
         }
-        elsif (($name eq "work") || ($name eq "tagline"))
-        {
-            my $url = "";
-            if ($field_node->hasAttribute("href"))
-            {
-                $url = " ( " . $field_node->getAttribute("href") . " )";
-            }
-            $self->_out(
-                  (" " x 4) . "-- "
-                . $field_node->textContent()
-                . $url
-                . "\n"
-            );
-        }
-        elsif ($name eq "channel")
-        {
-            my $channel = $field_node->textContent();
-            my $network = $info->findnodes("network")->shift()->textContent();
-            
-            $self->_out(
-                (" " x 4) . "-- "
-                . "$channel, $network"
-                . "\n"
-            );
-        }
-    }   
+    }
+
+    return;
 }
 
 1;
