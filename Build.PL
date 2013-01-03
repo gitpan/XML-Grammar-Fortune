@@ -24,12 +24,15 @@ my $builder = XML::Grammar::Builder->new(
         'warnings' => 0,
         'XML::LibXML' => 0,
         'XML::LibXSLT' => 0,
+        'XML::GrammarBase::Role::RelaxNG' => 0,
+        'MooX::late' => 0,
     },
     build_requires =>
     {
         'IO::String' => 0,
         'Test::Differences' => 0,
         'Test::More' => 0,
+        'Test::XML::Ordered' => 0,
     },
     add_to_cleanup      => [ 'XML-Grammar-Fortune-*' ],
     create_makefile_pl => 'passthrough',

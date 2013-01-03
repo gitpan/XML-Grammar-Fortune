@@ -7,22 +7,23 @@ use Fatal (qw(open));
 
 use File::Spec;
 
-use XML::LibXML;
-use XML::LibXSLT;
+use MooX qw/late/;
 
-use File::ShareDir ':ALL';
+use XML::GrammarBase::Role::RelaxNG;
+use XML::GrammarBase::Role::XSLT;
 
-use base 'Class::Accessor';
+with ('XML::GrammarBase::Role::RelaxNG');
+with XSLT(output_format => 'html');
 
-__PACKAGE__->mk_accessors(qw(
-    _data_dir
-    _mode
-    _output_mode
-    _rng_schema
-    _xslt_stylesheet
-    _xslt_obj
-    _xml_parser
-    ));
+has '+module_base' => (default => 'XML::Grammar::Fortune');
+has '+rng_schema_basename' => (default => 'fortune-xml.rng');
+
+
+has '+to_html_xslt_transform_basename' =>
+    (default => 'fortune-xml-to-html.xslt');
+
+has '_mode' => (is => 'rw', init_arg => 'mode');
+has '_output_mode' => (is => 'rw');
 
 =head1 NAME
 
@@ -30,11 +31,11 @@ XML::Grammar::Fortune - convert the FortunesXML grammar to other formats and fro
 
 =head1 VERSION
 
-Version 0.0500
+Version 0.0501
 
 =cut
 
-our $VERSION = '0.0500';
+our $VERSION = '0.0501';
 
 
 =head1 SYNOPSIS
@@ -43,7 +44,7 @@ our $VERSION = '0.0500';
 
     # Validate files.
 
-    my $validator = 
+    my $validator =
         XML::Grammar::Fortune->new(
             {
                 mode => "validate"
@@ -54,125 +55,27 @@ our $VERSION = '0.0500';
     exit($validator->run({input => "my-fortune-file.xml"}));
 
     # Convert files to XHTML.
-    
+
     my $converter =
         XML::Grammar::Fortune->new(
             {
                 mode => "convert_to_html",
                 output_mode => "filename"
             }
-        )
-    
+        );
+
     $converter->run(
         {
             input => "my-fortune-file.xml",
             output => "resultant-file.xhtml",
         }
-    )
+    );
 
 =head1 FUNCTIONS
 
 =head2 my $processor = XML::Grammar::Fortune->new({mode => $mode, input => $in, output => $out});
 
 Creates a new processor with mode $mode, and input and output files.
-
-=cut
-
-sub new
-{
-    my $class = shift;
-    my $self = {};
-    bless $self, $class;
-
-    $self->_init(@_);
-
-    return $self;
-}
-
-sub _get_rng_schema
-{
-    my $self = shift;
-
-    if (!defined($self->_rng_schema()))
-    {
-        $self->_rng_schema(
-            XML::LibXML::RelaxNG->new(
-                location =>
-                File::Spec->catfile(
-                    $self->_data_dir(), 
-                    "fortune-xml.rng",
-                ),
-            )
-        );
-    }
-
-    return $self->_rng_schema();
-}
-
-sub _get_xslt_stylesheet
-{
-    my $self = shift;
-
-    if (! $self->_xslt_stylesheet())
-    {
-        my $style_doc = $self->_get_xml_parser()->parse_file(
-            File::Spec->catfile(
-                $self->_data_dir(),
-                "fortune-xml-to-html.xslt",
-            )
-        );
-
-        my $stylesheet = $self->_get_xslt_obj()->parse_stylesheet($style_doc);
-
-        $self->_xslt_stylesheet($stylesheet);
-    }
-
-    return $self->_xslt_stylesheet();
-}
-
-sub _get_xml_parser
-{
-    my $self = shift;
-
-    if (! $self->_xml_parser())
-    {
-        $self->_xml_parser(
-            XML::LibXML->new()
-        );
-    }
-
-    return $self->_xml_parser();
-}
-
-sub _get_xslt_obj
-{
-    my $self = shift;
-
-    if (! $self->_xslt_obj())
-    {
-        $self->_xslt_obj(
-            XML::LibXSLT->new()
-        );
-    }
-
-    return $self->_xslt_obj();
-}
-
-sub _init
-{
-    my $self = shift;
-    my $args = shift;
-
-    $self->_mode($args->{mode});
-
-    $self->_output_mode($args->{output_mode} || "filename");
-
-    my $data_dir = $args->{'data_dir'} || dist_dir( 'XML-Grammar-Fortune' );
-
-    $self->_data_dir($data_dir);
-
-    return 0;
-}
 
 =head2 $self->run({ %args})
 
@@ -212,38 +115,32 @@ sub run
 
     if ($mode eq "validate")
     {
-        my $doc = $self->_get_xml_parser->parse_file($input);
-
-        my $code;
-        $code = $self->_get_rng_schema()->validate($doc);
-
-        if ($code)
-        {
-            die "Invalid file!";
-        }
-
-        return $code;
+        return $self->rng_validate_file($input);
     }
     elsif ($mode eq "convert_to_html")
     {
-        my $source = $self->_get_xml_parser->parse_file($input);
+        my $translate = sub {
+            my ($medium, $encoding) = @_;
 
-        my $results = $self->_get_xslt_stylesheet()->transform($source, %$xslt_params);
-
+            return $self->perform_xslt_translation(
+                {
+                    output_format => 'html',
+                    source => {file => $input},
+                    output => $medium,
+                    encoding => $encoding,
+                }
+            );
+        };
         if ($self->_output_mode() eq "string")
         {
-            $$output .= $self->_get_xslt_stylesheet()->output_string($results);
+            $$output .= $translate->('string', 'bytes');
         }
         else
         {
-            open my $xhtml_out_fh, ">", $output;
-            binmode ($xhtml_out_fh, ":utf8");
-            print {$xhtml_out_fh}
-                $self->_get_xslt_stylesheet()->output_string($results);
-            close($xhtml_out_fh);
+            $translate->({file => $output}, 'utf8');
         }
     }
-    
+
     return;
 }
 
@@ -253,7 +150,7 @@ __END__
 
 =head2 open
 
-This function is introduced by Fatal. It is mentioned here, in order to settle 
+This function is introduced by Fatal. It is mentioned here, in order to settle
 L<Pod::Coverage> . Ignore.
 
 =head1 AUTHOR

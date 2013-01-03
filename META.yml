@@ -6,9 +6,11 @@ build_requires:
   IO::String: 0
   Test::Differences: 0
   Test::More: 0
+  Test::XML::Ordered: 0
 configure_requires:
   Module::Build: 0.36
-generated_by: 'Module::Build version 0.3617'
+dynamic_config: 1
+generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921'
 keywords:
   - convert
   - fortune
@@ -31,23 +33,25 @@ name: XML-Grammar-Fortune
 provides:
   XML::Grammar::Fortune:
     file: lib/XML/Grammar/Fortune.pm
-    version: 0.0500
+    version: 0.0501
   XML::Grammar::Fortune::ToText:
     file: lib/XML/Grammar/Fortune/ToText.pm
-    version: 0.0500
+    version: 0.0501
 requires:
   Class::Accessor: 0
   File::ShareDir: 1.00
   File::Spec: 0
+  MooX::late: 0
   Text::Format: 0
+  XML::GrammarBase::Role::RelaxNG: 0
   XML::LibXML: 0
   XML::LibXSLT: 0
   perl: 5.008
   vars: 0
   warnings: 0
 resources:
-  Freshmeat: http://freshmeat.net/projects/fortune-xml
   homepage: http://web-cpan.berlios.de/modules/XML-Grammar-Fortune/
   license: http://www.opensource.org/licenses/mit-license.php
   repository: https://svn.berlios.de/svnroot/repos/web-cpan/XML-Grammar-Fortune/
-version: 0.0500
+  x_Freshmeat: http://freshmeat.net/projects/fortune-xml
+version: 0.0501
