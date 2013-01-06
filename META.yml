@@ -33,14 +33,14 @@ name: XML-Grammar-Fortune
 provides:
   XML::Grammar::Fortune:
     file: lib/XML/Grammar/Fortune.pm
-    version: 0.0502
+    version: 0.0503
   XML::Grammar::Fortune::ToText:
     file: lib/XML/Grammar/Fortune/ToText.pm
-    version: 0.0502
+    version: 0.0503
 requires:
-  Class::Accessor: 0
   File::ShareDir: 1.00
   File::Spec: 0
+  MooX: 0
   MooX::late: 0
   Text::Format: 0
   XML::GrammarBase::Role::RelaxNG: 0
@@ -54,4 +54,4 @@ resources:
   license: http://www.opensource.org/licenses/mit-license.php
   repository: https://svn.berlios.de/svnroot/repos/web-cpan/XML-Grammar-Fortune/
   x_Freshmeat: http://freshmeat.net/projects/fortune-xml
-version: 0.0502
+version: 0.0503
