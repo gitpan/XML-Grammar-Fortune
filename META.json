@@ -61,11 +61,11 @@
    "provides" : {
       "XML::Grammar::Fortune" : {
          "file" : "lib/XML/Grammar/Fortune.pm",
-         "version" : "0.0505"
+         "version" : "0.0506"
       },
       "XML::Grammar::Fortune::ToText" : {
          "file" : "lib/XML/Grammar/Fortune/ToText.pm",
-         "version" : "0.0505"
+         "version" : "0.0506"
       }
    },
    "release_status" : "stable",
@@ -79,5 +79,5 @@
       },
       "x_Freshmeat" : "http://freshmeat.net/projects/fortune-xml"
    },
-   "version" : "0.0505"
+   "version" : "0.0506"
 }
