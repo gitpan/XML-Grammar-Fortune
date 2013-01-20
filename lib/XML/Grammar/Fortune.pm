@@ -10,7 +10,7 @@ use File::Spec;
 use MooX qw/late/;
 
 use XML::GrammarBase::Role::RelaxNG;
-use XML::GrammarBase::Role::XSLT;
+use XML::GrammarBase::Role::XSLT v0.2.0;
 
 with ('XML::GrammarBase::Role::RelaxNG');
 with XSLT(output_format => 'html');
@@ -31,11 +31,11 @@ XML::Grammar::Fortune - convert the FortunesXML grammar to other formats and fro
 
 =head1 VERSION
 
-Version 0.0506
+Version 0.0507
 
 =cut
 
-our $VERSION = '0.0506';
+our $VERSION = '0.0507';
 
 
 =head1 SYNOPSIS
@@ -128,6 +128,7 @@ sub run
                     source => {file => $input},
                     output => $medium,
                     encoding => $encoding,
+                    xslt_params => $xslt_params,
                 }
             );
         };
