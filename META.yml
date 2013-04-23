@@ -10,7 +10,7 @@ build_requires:
 configure_requires:
   Module::Build: 0.36
 dynamic_config: 1
-generated_by: 'Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921'
+generated_by: 'Module::Build version 0.3901, CPAN::Meta::Converter version 2.120921'
 keywords:
   - convert
   - fortune
@@ -33,10 +33,10 @@ name: XML-Grammar-Fortune
 provides:
   XML::Grammar::Fortune:
     file: lib/XML/Grammar/Fortune.pm
-    version: 0.0507
+    version: 0.0508
   XML::Grammar::Fortune::ToText:
     file: lib/XML/Grammar/Fortune/ToText.pm
-    version: 0.0507
+    version: 0.0508
 requires:
   File::ShareDir: 1.00
   File::Spec: 0
@@ -53,6 +53,6 @@ requires:
 resources:
   homepage: http://web-cpan.berlios.de/modules/XML-Grammar-Fortune/
   license: http://www.opensource.org/licenses/mit-license.php
-  repository: https://svn.berlios.de/svnroot/repos/web-cpan/XML-Grammar-Fortune/
+  repository: https://bitbucket.org/shlomif/fortune-xml
   x_Freshmeat: http://freshmeat.net/projects/fortune-xml
-version: 0.0507
+version: 0.0508

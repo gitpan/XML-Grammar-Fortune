@@ -4,7 +4,7 @@
       "Shlomi Fish <shlomif@iglu.org.il>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "Module::Build version 0.4003, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Module::Build version 0.3901, CPAN::Meta::Converter version 2.120921",
    "keywords" : [
       "convert",
       "fortune",
@@ -62,11 +62,11 @@
    "provides" : {
       "XML::Grammar::Fortune" : {
          "file" : "lib/XML/Grammar/Fortune.pm",
-         "version" : "0.0507"
+         "version" : "0.0508"
       },
       "XML::Grammar::Fortune::ToText" : {
          "file" : "lib/XML/Grammar/Fortune/ToText.pm",
-         "version" : "0.0507"
+         "version" : "0.0508"
       }
    },
    "release_status" : "stable",
@@ -76,9 +76,9 @@
          "http://www.opensource.org/licenses/mit-license.php"
       ],
       "repository" : {
-         "url" : "https://svn.berlios.de/svnroot/repos/web-cpan/XML-Grammar-Fortune/"
+         "url" : "https://bitbucket.org/shlomif/fortune-xml"
       },
       "x_Freshmeat" : "http://freshmeat.net/projects/fortune-xml"
    },
-   "version" : "0.0507"
+   "version" : "0.0508"
 }
