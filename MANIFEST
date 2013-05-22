@@ -3,7 +3,6 @@ Changes
 MANIFEST
 META.json
 META.yml
-Makefile.PL
 README
 TODO
 contrib/convert-irc-log-to-fortune-xml.pl
@@ -19,6 +18,7 @@ scripts/tag-release.pl
 t/00basic.t
 t/00-load.t
 t/boilerplate.t
+t/cpan-changes.t
 t/data/text-results/irc-conversation-1.txt
 t/data/text-results/irc-conversation-3-with-join-unjoin.txt
 t/data/text-results/quote-fort-sample-10-with-hyperlink.txt
@@ -74,6 +74,7 @@ t/data/xml/screenplay-fort-sample-2-with-italics.xml
 t/data/xml/screenplay-fort-sample-3-with-inlinedesc.xml
 t/pod-coverage.t
 t/pod.t
+t/style-trailing-space.t
 t/to-text.t
 t/to-xhtml-using-api.t
 t/to-xhtml.t
