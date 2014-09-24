@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 39;
+use Test::More tests => 48;
 use Test::Differences;
 use Test::XML::Ordered qw(is_xml_ordered);
 
@@ -12,9 +12,12 @@ use Encode;
 
 use XML::Grammar::Fortune;
 
-# TEST:$num_texts=13
+# TEST:$num_texts=16
 
 my @tests = (qw(
+        facts-fort-1
+        facts-fort-3-more-than-one-list
+        facts-fort-4-from-shlomifish.org
         irc-conversation-4-several-convos
         irc-convos-and-raw-fortunes-1
         raw-fort-empty-info-1
@@ -87,6 +90,7 @@ foreach my $fn_base (@tests)
     is_xml_ordered (
         [ string => normalize_xml($results_buffer), @common, ],
         [ location => "./t/data/xhtml-results/$fn_base.xhtml", @common, ],
+        {},
         "Testing for Good XSLTing of '$fn_base'",
     );
 }
@@ -123,6 +127,7 @@ foreach my $fn_base (@tests)
         is_xml_ordered(
             [ string => normalize_xml($results_buffer), @common, ],
             [ location => "./t/data/xhtml-results/$fn_base.xhtml", @common, ],
+            {},
             "Testing for Good XSLTing of '$fn_base'",
         );
 

@@ -10,6 +10,8 @@
  />
 
 <xsl:param name="fortune.id"></xsl:param>
+<xsl:param name="filter-facts-list.id"></xsl:param>
+<xsl:param name="filter.lang">en-US</xsl:param>
 
 <!-- The purpose of this function is to recursively copy elements without a
 namespace-->
@@ -44,6 +46,58 @@ namespace-->
             </xsl:choose>
         </body>
     </html>
+</xsl:template>
+
+<xsl:template match="/facts">
+    <html>
+        <xsl:attribute name="xml:lang">
+            <xsl:value-of select="$filter.lang" />
+        </xsl:attribute>
+        <head>
+            <title>Facts</title>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        </head>
+        <body>
+            <xsl:choose>
+                <xsl:when test="$fortune.id">
+                    <xsl:apply-templates select="list/f[@id=$fortune.id]" />
+                </xsl:when>
+                <xsl:when test="$filter-facts-list.id">
+                    <xsl:apply-templates select="list[@xml:id=$filter-facts-list.id]" />
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:apply-templates select="list" />
+                </xsl:otherwise>
+            </xsl:choose>
+        </body>
+    </html>
+</xsl:template>
+
+<xsl:template match="/facts/list">
+    <div class="list">
+        <xsl:attribute name="xml:lang">
+            <xsl:value-of select="$filter.lang" />
+        </xsl:attribute>
+        <h3 id="{@xml:id}"><xsl:value-of select="@title" /></h3>
+        <div class="main_facts_list">
+            <ul>
+                <xsl:apply-templates select="f[l/@xml:lang = $filter.lang]" />
+            </ul>
+        </div>
+    </div>
+</xsl:template>
+
+<xsl:template match="/facts/list/f">
+    <li class="fact">
+        <xsl:apply-templates select="l[@xml:lang = $filter.lang]"/>
+    </li>
+</xsl:template>
+
+<xsl:template match="/facts/list/f/l">
+    <blockquote>
+        <xsl:apply-templates select="body/*" mode="copy-html-ns"/>
+    </blockquote>
+    <xsl:call-template name="render_info" />
 </xsl:template>
 
 <xsl:template match="fortune">
